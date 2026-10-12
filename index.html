@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>钢结构综合单价 · 报价骨架</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F6F7;--ink:#141A1F;--ink-soft:#4A555E;--line:#D3D9DD;--line-soft:#E6EAEC;
+    --panel:#FFFFFF;--blue:#0E5A8A;--blue-deep:#0A3D5C;--blue-wash:#EAF2F7;--zinc:#8A97A0;
+    --warn:#B26A00;--warn-wash:#FCF3E2;--ok:#2E7D5B;--ok-wash:#E7F4EC;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.5;padding:24px 16px 80px;}
+  .wrap{max-width:1080px;margin:0 auto;}
+  h1{font-family:"Space Grotesk","Inter",sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px;}
+  .sub{color:var(--ink-soft);font-size:13px;margin:0 0 22px;}
+  .num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:20px;overflow:hidden;}
+  .card-head{display:flex;align-items:baseline;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,#FBFCFC,#F6F8F9);}
+  .card-head .idx{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:#fff;background:var(--blue);
+    border-radius:5px;padding:3px 8px;letter-spacing:.02em;}
+  .card-head h2{font-size:15px;font-weight:600;margin:0;}
+  .card-head .hint{margin-left:auto;color:var(--ink-soft);font-size:12px;}
+  .card-body{padding:16px 18px;}
+  .note{font-size:12px;color:var(--ink-soft);background:var(--blue-wash);border-left:3px solid var(--blue);
+    border-radius:0 6px 6px 0;padding:8px 12px;margin:0 0 14px;}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{border-collapse:collapse;width:100%;min-width:920px;}
+  .cuttbl{min-width:auto;}
+  th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line-soft);white-space:nowrap;}
+  th{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;
+    text-align:right;background:#FBFCFC;position:sticky;top:0;}
+  th.l,td.l{text-align:left;}
+  th.c,td.c{text-align:center;}
+  td.calc{color:var(--blue-deep);background:#F7FAFB;}
+  tr.pending td.cost{color:var(--warn);}
+  tfoot td{border-top:2px solid var(--line);border-bottom:none;font-weight:600;background:#F7FAFB;}
+  input{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;border:1px solid var(--line);
+    border-radius:5px;padding:5px 6px;width:100%;text-align:right;font-size:13px;background:#fff;color:var(--ink);}
+  input.l{text-align:left;font-family:"Inter",sans-serif;}
+  select{font-family:"Inter",sans-serif;font-size:12px;border:1px solid var(--line);border-radius:5px;padding:5px 4px;background:#fff;color:var(--ink);cursor:pointer;}
+  select:focus{outline:none;border-color:var(--blue);}
+  input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-wash);}
+  input::placeholder{color:#B4BCC2;}
+  .sec-in{min-width:168px;}
+  .name-in{min-width:96px;}
+  .cut-in{width:78px;}
+  .uwcell{display:flex;align-items:center;gap:4px;justify-content:flex-end;}
+  .uwcell input{width:76px;}
+  .wbadge{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;display:none;}
+  .w-lib{background:var(--blue-wash);color:var(--blue-deep);}
+  .w-est{background:var(--warn-wash);color:var(--warn);}
+  .rem{border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:4px;font-size:10px;padding:2px 5px;cursor:pointer;line-height:1;}
+  .rem:hover{border-color:var(--blue);color:var(--blue);}
+  .del{border:none;background:none;color:var(--zinc);cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;border-radius:4px;}
+  .del:hover{color:#C0392B;background:#FBEDEA;}
+  .btn{font-family:"Inter",sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--line);
+    background:#fff;color:var(--ink);border-radius:6px;padding:7px 13px;}
+  .btn:hover{border-color:var(--blue);color:var(--blue);}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;}
+  .prices{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin-top:12px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11px;color:var(--ink-soft);font-weight:500;}
+  .field input{width:120px;}
+  .grp{border:1px solid var(--line);border-radius:9px;margin-bottom:14px;overflow:hidden;}
+  .grp-head{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;padding:10px 14px;background:#F7FAFB;border-bottom:1px solid var(--line-soft);}
+  .grp-head .t{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;}
+  .grp-head .m{font-size:12px;color:var(--ink-soft);}
+  .grp-head .m b{color:var(--ink);font-family:"IBM Plex Mono",monospace;}
+  .opt-tbl{min-width:auto;}
+  .opt-tbl tr.best{background:var(--ok-wash);}
+  .opt-tbl tr.best td:first-child::after{content:" ✓ 最省";color:var(--ok);font-size:11px;font-weight:600;}
+  .oversize{color:var(--warn);font-size:12px;padding:6px 14px;background:var(--warn-wash);}
+  .mstrip{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:baseline;padding:14px 18px;background:var(--blue-wash);
+    border:1px solid #CFE0EB;border-radius:10px;margin-bottom:20px;}
+  .mstrip .item{font-size:12px;color:var(--ink-soft);}
+  .mstrip .item b{display:block;font-family:"IBM Plex Mono",monospace;font-size:16px;color:var(--blue-deep);font-weight:600;}
+  .mstrip .big b{font-size:20px;}
+  /* main table lines */
+  .line{display:grid;grid-template-columns:26px 1fr 128px 150px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);}
+  .line:last-child{border-bottom:none;}
+  .line .no{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--zinc);text-align:center;}
+  .line .name{font-weight:500;}
+  .line .name small{display:block;color:var(--ink-soft);font-weight:400;font-size:11px;}
+  .line .mid{color:var(--ink-soft);font-size:12px;text-align:right;}
+  .line .val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;font-size:14px;font-weight:500;}
+  .line input{width:100%;}
+  .badge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.03em;vertical-align:middle;margin-left:6px;}
+  .b-auto{background:var(--blue-wash);color:var(--blue-deep);}
+  .b-pct{background:#EFEAF7;color:#5B3E8A;}
+  .b-calc{background:#EAF5EF;color:var(--ok);}
+  .warnrow{background:var(--warn-wash);border-radius:6px;}
+  tr.ovrrow td{background:#FCF3E2;}
+  .warnrow .val{color:var(--warn);}
+  .flag{color:var(--warn);font-size:11px;margin-left:6px;}
+  .subcalc{grid-column:1 / -1;margin-top:8px;padding:12px;background:#F7FAFB;border:1px dashed var(--line);border-radius:8px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;}
+  .subcalc .field input{width:96px;}
+  .subcalc .field .out{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--blue-deep);padding:5px 0;}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .seg button{border:none;background:#fff;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--ink-soft);font-family:"Inter",sans-serif;}
+  .seg button.on{background:var(--blue);color:#fff;}
+  .eq{color:var(--zinc);font-family:"IBM Plex Mono",monospace;align-self:center;padding-bottom:6px;}
+  .result{background:var(--blue-deep);color:#fff;border:none;}
+  .result .card-head{background:none;border-bottom:1px solid rgba(255,255,255,.15);}
+  .result .card-head h2{color:#fff;}
+  .result .card-head .idx{background:#fff;color:var(--blue-deep);}
+  .result .rline{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.12);}
+  .result .rline:last-child{border-bottom:none;}
+  .result .rlabel{font-size:13px;color:#CFE0EB;}
+  .result .rlabel b{color:#fff;font-weight:600;}
+  .result .rval{font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600;}
+  .result .total{padding-top:16px;margin-top:4px;border-top:2px solid rgba(255,255,255,.3);border-bottom:none;}
+  .result .total .rlabel{font-size:16px;color:#fff;font-weight:700;}
+  .result .total .rval{font-size:26px;font-weight:700;letter-spacing:-.01em;}
+  .result .unit{font-size:12px;color:#9FBCD0;font-weight:400;margin-left:4px;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  .foothint{color:var(--zinc);font-size:12px;margin-top:8px;text-align:center;}
+  /* 打印视图 */
+  #printArea{display:none;}
+  @media print{
+    body{padding:0;background:#fff;font-size:14px;}
+    body>.wrap>*{display:none !important;}
+    #printArea{display:block !important;}
+    @page{size:A4;margin:12mm;}
+  }
+  #printArea{font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif;color:#000;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  #printArea h2{font-family:"Space Grotesk",sans-serif;font-size:24px;margin:0 0 4px;}
+  #printArea .psub{font-size:14px;color:#333;margin:0 0 16px;}
+  #printArea table{width:100%;border-collapse:collapse;margin:8px 0;page-break-inside:avoid;}
+  #printArea h3{font-size:17px;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid #333;font-weight:700;page-break-after:avoid;}
+  #printArea th,#printArea td{border:1.5px solid #555;padding:7px 10px;text-align:right;font-size:14px;}
+  #printArea th{background:#dfe7ec;font-weight:700;font-size:14px;}
+  #printArea td.l,#printArea th.l{text-align:left;}
+  #printArea .tot td{font-weight:700;background:#eef3f6;font-size:15px;}
+  #printArea .grand td{font-weight:800;background:#dbe8f2;color:#0A3D5C;border:2.5px solid #0E5A8A;font-size:20px;}
+  #printArea .num{font-variant-numeric:tabular-nums;font-weight:600;}
+  #printArea .ft{margin-top:16px;font-size:12px;color:#555;line-height:1.5;}
+  /* 主表十项:整份最核心,加重 */
+  #printArea .maintbl th{background:#bcd4e2;color:#0A3D5C;font-size:15px;border-color:#0E5A8A;font-weight:700;}
+  #printArea .maintbl td{font-size:15px;padding:9px 10px;}
+  #printArea .maintbl td:nth-child(2){font-size:17px;font-weight:800;color:#0A3D5C;}
+  #printArea .maintbl tr:nth-child(even) td{background:#eef4f8;}
+  @media(max-width:640px){
+    .line{grid-template-columns:22px 1fr 150px;}
+    .line .mid{display:none;}
+    .subcalc .field input{width:80px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>钢结构综合单价 · 报价骨架 <span style="font-size:12px;font-weight:500;color:var(--zinc);font-family:'IBM Plex Mono',monospace;vertical-align:middle">v1.0</span></h1>
+  <p class="sub">型钢 + 钢板合并算 Material,九项叠加出 Total($/t)· 没填价的料先不计入 · 防漏项</p>
+
+  <div class="toolbar">
+    <input id="projName" class="l" placeholder="项目名(如 DE151防撞栏)" style="min-width:200px;font-family:Inter,sans-serif">
+    <button class="btn primary" onclick="saveProject()">保存项目</button>
+    <select id="projSel" onchange="loadProject(this.value)" style="min-width:170px"><option value="">— 打开已存项目 —</option></select>
+    <button class="btn" onclick="deleteProject()">删除</button>
+    <button class="btn" onclick="newProject()">新建空白</button>
+  </div>
+  <div class="toolbar">
+    <button class="btn" onclick="addMat()">+ 加型钢</button>
+    <button class="btn" onclick="addCut()">+ 加钢板</button>
+    <button class="btn" onclick="saveJSON()">导出文件(换电脑/备份)</button>
+    <button class="btn" onclick="document.getElementById('loadf').click()">载入文件</button>
+    <input id="loadf" type="file" accept=".json" style="display:none" onchange="loadJSON(event)">
+    <button class="btn" onclick="doPrint()">打印 / 存 PDF</button>
+  </div>
+  <p id="saveHint" style="font-size:12px;color:var(--zinc);margin:-8px 0 18px">自动记忆已开:同一台电脑同一浏览器会记住你填的内容,关了再开还在。换电脑/发同事用"导出文件"存进你的云盘。</p>
+
+  <!-- ============ 01 型钢目录 ============ -->
+  <div class="card">
+    <div class="card-head"><span class="idx">01</span><h2>材料目录 · 型钢(按根买)</h2><span class="hint">截面可搜索 · 单位重自动带出</span></div>
+    <div class="card-body">
+      <p class="note">截面要自动带出单位重,留个"是什么"的线索:<b>UB 350x250x94.2</b>、<b>350x250x94.2 kg/m</b> 或 <b>I-beam 350x250x94.2</b> 都行;<b>SHS/CHS</b> 按几何估算(标"估算",核型钢表);角钢<b>L 75x75x6</b>走库;库里没有的手填后点"记"。BQ给的是kg,工具按单根重换算成<b>需要根数</b>(整根买、含余料),每根价按你询价填,<b>该材料$/t 是算出来的输出</b>。<b>BQ没给kg时,在"长度m"填图纸量的总长(支持 =0.45*41+12.25 算式),自动 ×单位重 得kg</b>;直接有kg就在BQ格填(也支持=算式)。余料率标出这行买整根多浪费多少,≥30%变红。<b>缺每根价的行不计入 Material</b>。<br><b>填了"切料明细"(段长×段数,多段用+,如 0.55×1536+0.339×256)就按排料算根数</b>:每段占用=段长+锯缝,从长到短逐段塞进第一根放得下的定尺料,放不下开新料。根数旁标"排料";没填则标"总长"(总长÷定尺向上取整)。</p>
+      <div style="display:flex;align-items:flex-end;gap:6px;margin:0 0 12px"><span class="field"><label style="font-size:11px;color:var(--ink-soft)">锯缝损耗 m(默认0.003)</label><input class="num" id="sawKerf" placeholder="0.003" value="0.003" oninput="calc()" style="width:120px"></span></div>
+      <datalist id="steelList"></datalist>
+      <div class="scroll">
+        <table id="mattbl">
+          <thead><tr>
+            <th class="c">#</th><th class="l">标签/位置</th><th class="l">截面</th><th>单位重 kg/m</th>
+            <th>定尺 m</th><th>长度 m</th><th>切料明细(段长×段数)</th><th>BQ需求 kg</th><th>每根价 $/pc</th><th>单根重 kg</th><th>需要根数</th><th>余料率</th><th>该材料 $/t</th><th>实购总价 $</th><th></th>
+          </tr></thead>
+          <tbody id="matbody"></tbody>
+        </table>
+      </div>
+      <div class="row-actions"><button class="btn" onclick="addMat()">+ 加型钢</button></div>
+    </div>
+  </div>
+
+  <!-- ============ 01B 钢板套裁 ============ -->
+  <div class="card">
+    <div class="card-head"><span class="idx">01B</span><h2>材料目录 · 钢板(买大板套裁)</h2><span class="hint">4×8=1219×2438 · 8×12=2438×6096</span></div>
+    <div class="card-body">
+      <p class="note">按 BQ 填每种小板的 <b>长、宽、厚、BQ重量kg</b>。块数由 重量 ÷ 单块重 自动反推(kg取整会有毛边,可手改)。<b>厚度自动分组,每组各填自己的大板价</b>(厚板更贵)。每组比 全4×8 / 全8×12 / 混买,✓ 标最省,算出的<b>大板张数就是给采购下单的数</b>。某组没填大板价就不计入 Material(只算净重)。摆块只算长宽方向、取横竖多的那种,偏保守。</p>
+      <div class="scroll">
+        <table id="cuttbl" class="cuttbl">
+          <thead><tr>
+            <th class="c">#</th><th class="l">标签</th><th>长 mm</th><th>宽 mm</th><th>厚 mm</th><th>BQ重量 kg</th><th>单块重 kg</th><th>块数(自动·可改)</th><th></th>
+          </tr></thead>
+          <tbody id="cutbody"></tbody>
+        </table>
+      </div>
+      <div class="row-actions"><button class="btn" onclick="addCut()">+ 加钢板</button>
+        <span style="display:flex;align-items:flex-end;gap:6px;margin-left:6px"><span class="field"><label style="font-size:11px;color:var(--ink-soft)">切缝 mm(可留空)</label><input class="num" id="kerf" placeholder="0" oninput="calc()" style="width:120px"></span></span>
+      </div>
+      <div id="groups" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- ============ 材料合计 ============ -->
+  <div class="mstrip">
+    <div class="item">型钢已计入<b><span id="sSteel">$0.00 / 0.000t</span></b></div>
+    <div class="item">钢板已计入<b><span id="sPlate">$0.00 / 0.000t</span></b></div>
+    <div class="item">项目总吨重(仅已计入)<b class="num"><span id="sTon">0.000</span> t</b></div>
+    <div class="item big">合并 Material<b>$<span id="sMat">0.00</span> /t</b></div>
+    <div class="item" style="min-width:180px">全项目整体损耗率<b><span id="sWaste" class="num">—</span> <span id="sWasteVerdict" style="font-size:11px;font-weight:600"></span></b></div>
+  </div>
+
+  <!-- ============ 02 主表 ============ -->
+  <div class="card">
+    <div class="card-head"><span class="idx">02</span><h2>综合单价主表 · 十项</h2><span class="hint">蓝=自动 · 紫=按比例 · 绿=先算后除</span></div>
+    <div class="card-body">
+
+      <div class="line"><div class="no">1</div>
+        <div class="name">Material 材料<span class="badge b-auto">自动·可覆盖</span><small>加权算出;手填则报价用手填价(损耗/利润都跟着手填)</small></div>
+        <div class="mid" style="text-align:right;line-height:1.3">手动 $/t <input class="num" id="matManual" placeholder="空=用算出" oninput="calc()" style="width:92px;display:inline-block"><br><span style="font-size:11px;color:var(--ink-soft)">加权算出 <b id="vMatCalc" class="num">0.00</b></span></div>
+        <div class="val num" id="vMat">0.00</div></div>
+
+      <div class="line"><div class="no">2</div>
+        <div class="name">Wastage 损耗<span class="badge b-pct">按比例</span><small>= Material × 损耗%(只踩 Material)</small></div>
+        <div class="mid"><input class="num" id="wastPct" value="10" oninput="calc()" style="width:64px;display:inline-block"> %</div>
+        <div class="val num" id="vWast">0.00</div></div>
+
+      <div class="line"><div class="no">3</div>
+        <div class="name">Fabrication 加工<small>一口价,直接填</small></div>
+        <div class="mid">$/t</div><div><input class="num" id="fab" placeholder="0" oninput="calc()"></div></div>
+
+      <div class="line"><div class="no">4</div>
+        <div class="name">NDT/ITA 探伤检验<span class="badge b-calc">先算后除</span><small>材料测试 + 大/小档,÷ 吨重</small></div>
+        <div class="mid">$/t</div><div class="val num calc" id="vNdt">0.00</div>
+        <div class="subcalc">
+          <div class="field"><label>材料种数 × $400</label><input class="num" id="ndtKinds" placeholder="0" oninput="calc()"></div>
+          <span class="eq">+</span>
+          <div class="field"><label>规模档</label><div class="seg" id="ndtSeg">
+            <button class="on" onclick="setNdt('small')" id="ndtSmall">小 · 包次</button>
+            <button onclick="setNdt('large')" id="ndtLarge">大 · 包月</button></div></div>
+          <div class="field" id="ndtSmallF"><label>上门次数 × $1200</label><input class="num" id="ndtVisits" placeholder="0" oninput="calc()"></div>
+          <div class="field" id="ndtLargeF" style="display:none"><label>月数 × $8000</label><input class="num" id="ndtMonths" placeholder="0" oninput="calc()"></div>
+          <span class="eq">= 总额</span>
+          <div class="field"><label>合计 $</label><div class="out"><span id="ndtTotal">0</span></div></div>
+          <span class="eq">÷ 吨重 =</span>
+          <div class="field"><label>$/t</label><div class="out"><span id="ndtOut">0.00</span></div></div>
+        </div></div>
+
+      <div class="line"><div class="no">5</div>
+        <div class="name">HDG 镀锌<small id="hdgSub">一口价 $/t</small></div>
+        <div class="mid"><div class="seg" style="transform:scale(.92);transform-origin:right">
+          <button class="on" onclick="setHdg('flat')" id="hdgFlat">一口价</button>
+          <button onclick="setHdg('calc')" id="hdgCalc">单独算</button></div></div>
+        <div id="hdgFlatBox"><input class="num" id="hdgV" placeholder="0" oninput="calc()"></div>
+        <div class="val num calc" id="vHdgCalc" style="display:none">0.00</div>
+        <div class="subcalc" id="hdgCalcBox" style="display:none">
+          <div class="field"><label>镀锌总额 $</label><input class="num" id="hdgTotal" placeholder="0" oninput="calc()"></div>
+          <span class="eq">÷ 吨重 =</span><div class="field"><label>$/t</label><div class="out"><span id="hdgOut">0.00</span></div></div></div></div>
+
+      <div class="line"><div class="no">6</div>
+        <div class="name">Paint 油漆<small id="paintSub">一口价 $/t</small></div>
+        <div class="mid"><div class="seg" style="transform:scale(.92);transform-origin:right">
+          <button class="on" onclick="setPaint('flat')" id="paintFlat">一口价</button>
+          <button onclick="setPaint('calc')" id="paintCalc">单独算</button></div></div>
+        <div id="paintFlatBox"><input class="num" id="paintV" placeholder="0" oninput="calc()"></div>
+        <div class="val num calc" id="vPaintCalc" style="display:none">0.00</div>
+        <div class="subcalc" id="paintCalcBox" style="display:none">
+          <div class="field"><label>油漆总额 $</label><input class="num" id="paintTotal" placeholder="0" oninput="calc()"></div>
+          <span class="eq">÷ 吨重 =</span><div class="field"><label>$/t</label><div class="out"><span id="paintOut">0.00</span></div></div></div></div>
+
+      <div class="line"><div class="no">7</div>
+        <div class="name">Transport 运输<span class="badge b-calc">先算后除</span><small>按吨数 或 按车趟,÷ 吨重</small></div>
+        <div class="mid">$/t</div><div class="val num calc" id="vTrans">0.00</div>
+        <div class="subcalc" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div class="seg" style="align-self:flex-start">
+            <button class="on" onclick="setTr('ton')" id="trTonBtn">按吨数</button>
+            <button onclick="setTr('truck')" id="trTruckBtn">按车趟</button></div>
+          <div id="trTonBox" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+            <div class="field"><label>吨数 t</label><input class="num" id="trTon" placeholder="0" oninput="calc()"></div>
+            <span class="eq">×</span><div class="field"><label>单价 $/t</label><input class="num" id="trTonRate" placeholder="0" oninput="calc()"></div>
+            <span class="eq">= 总额</span><div class="field"><label>合计 $</label><div class="out"><span id="trTonTotal">0</span></div></div>
+            <span class="eq">÷ 吨重 =</span><div class="field"><label>$/t</label><div class="out"><span id="trTonOut">0.00</span></div></div></div>
+          <div id="trTruckBox" style="display:none;flex-direction:column;gap:10px">
+            <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+              <div class="field"><label>每车载重 t</label><input class="num" id="trCap" placeholder="20" oninput="trTripAuto()"></div>
+              <span class="eq">→</span><div class="field"><label>趟数(可改)</label><input class="num" id="trTrips2" placeholder="0" oninput="trTripsManual()"></div>
+              <span class="eq">×</span><div class="field"><label>每趟 $</label><input class="num" id="trTripRate" placeholder="0" oninput="calc()"></div>
+              <span class="eq">= 总额</span><div class="field"><label>合计 $</label><div class="out"><span id="trTruckTotal">0</span></div></div>
+              <span class="eq">÷ 吨重 =</span><div class="field"><label>$/t</label><div class="out"><span id="trTruckOut">0.00</span></div></div></div>
+            <div class="field" style="max-width:230px"><label>平板车可载长度 m(超长预警)</label><input class="num" id="trBedLen" placeholder="12" oninput="calc()"></div>
+            <div id="trOverMsg" style="font-size:12px;color:var(--warn)"></div></div></div></div>
+
+      <div class="line"><div class="no">8</div>
+        <div class="name">Installation 安装<small>一口价,直接填</small></div>
+        <div class="mid">$/t</div><div><input class="num" id="inst" placeholder="0" oninput="calc()"></div></div>
+
+      <div class="line" id="craneLine"><div class="no">9</div>
+        <div class="name">Crane / MEWP 吊车<span class="badge b-calc">先算后除</span><small>天数 × 日租 = 总额,÷ 吨重 <span class="flag" id="craneFlag">← 常漏,别留空</span></small></div>
+        <div class="mid">$/t</div><div class="val num calc" id="vCrane">0.00</div>
+        <div class="subcalc">
+          <div class="field"><label>天数</label><input class="num" id="crDays" placeholder="0" oninput="calc()"></div>
+          <span class="eq">×</span><div class="field"><label>日租 $</label><input class="num" id="crRate" placeholder="0" oninput="calc()"></div>
+          <span class="eq">= 总额</span><div class="field"><label>合计 $(可直接改)</label><input class="num" id="crTotal" placeholder="0" oninput="crManual()"></div>
+          <span class="eq">÷ 吨重 =</span><div class="field"><label>$/t</label><div class="out"><span id="crOut">0.00</span></div></div></div></div>
+
+      <div class="line"><div class="no">10</div>
+        <div class="name">Profit 利润<span class="badge b-pct">按比例</span><small>= 成本合计 × 利润%(项目小就提%)</small></div>
+        <div class="mid"><input class="num" id="profPct" value="10" oninput="calc()" style="width:64px;display:inline-block"> %</div>
+        <div class="val num" id="vProf">0.00</div></div>
+
+    </div>
+  </div>
+
+  <!-- ============ 03 结果 ============ -->
+  <div class="card result">
+    <div class="card-head"><span class="idx">03</span><h2>结果</h2></div>
+    <div class="card-body">
+      <div class="rline"><span class="rlabel">成本合计 <b>Material → Crane</b>(含 Wastage)</span><span class="rval">$<span id="rCost">0.00</span><span class="unit">/t</span></span></div>
+      <div class="rline"><span class="rlabel">Profit 利润(<span id="rProfPct">10</span>%)</span><span class="rval">$<span id="rProf">0.00</span><span class="unit">/t</span></span></div>
+      <div class="rline total"><span class="rlabel">Total 综合单价</span><span class="rval">$<span id="rTotal">0.00</span><span class="unit">/t</span></span></div>
+      <div class="rline"><span class="rlabel">项目总价 = Total × <span id="rTon">0.000</span> t</span><span class="rval">$<span id="rGrand">0.00</span></span></div>
+    </div>
+  </div>
+
+  <!-- ============ 04 BQ 单价换算 ============ -->
+  <div class="card">
+    <div class="card-head"><span class="idx">04</span><h2>BQ 单价换算</h2><span class="hint">用 Total 反算每个 BQ 项的 Rate</span></div>
+    <div class="card-body">
+      <p class="note">把 Total 综合单价($/t)摊回每个 BQ 项。<b>每项重量 = 材料目录里"标签/位置"等于该 BQ 编号的行,BQ需求kg 加总 × 零碎件系数</b>(默认1.02,盖螺栓/碎件那点没进算量的料)。<b>所以材料目录每行的标签要填对应的 BQ 编号</b>(如 2.4)。Rate = 该项重量t × Total ÷ BQ数量。走供应商报价、不按 $/t 的项(如平台),可手动填重量覆盖。底部对账:匹配重量和项目净重对不上,说明有材料行漏填标签。</p>
+      <div style="display:flex;align-items:flex-end;gap:6px;margin:0 0 12px"><span class="field"><label style="font-size:11px;color:var(--ink-soft)">零碎件系数(默认1.02)</label><input class="num" id="bqcCoeff" placeholder="1.02" value="1.02" oninput="calc()" style="width:120px"></span></div>
+      <div class="scroll">
+        <table id="bqctbl" class="cuttbl">
+          <thead><tr>
+            <th class="c">#</th><th class="l">BQ编号</th><th class="l">描述</th><th>BQ数量</th><th>单位</th>
+            <th>匹配重量 kg</th><th>每单位重</th><th>手动重量 t</th><th>该项重量 t</th><th>Rate</th><th>Amount $</th><th></th>
+          </tr></thead>
+          <tbody id="bqcbody"></tbody>
+          <tfoot>
+            <tr class="tot">
+              <td></td><td class="l" colspan="4">合计</td>
+              <td class="num" id="bqcSumKg">0</td><td></td><td></td>
+              <td class="num" id="bqcSumWt">0.000</td><td></td><td class="num" id="bqcSumAmt">0.00</td><td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="row-actions"><button class="btn" onclick="addBQC()">+ 加 BQ 项</button></div>
+      <div id="bqcRecon" style="margin-top:12px;font-size:12px;line-height:1.7"></div>
+    </div>
+  </div>
+
+  <p class="foothint">对上报价用 Total,对下成本在各项里,差就是 Profit。没填价的料先不计入,补价后总吨重和"先算后除"各项会自动更新。存档含你记住的截面。</p>
+  <div id="printArea"></div>
+</div>
+
+<script>
+let ndtMode='small', paintMode='flat', hdgMode='flat', trMode='ton';
+let trManualTrips=false, crManualFlag=false;
+
+/* ---------- 钢板常量 ---------- */
+const SHEETS={s48:{name:"4×8",L:2438,W:1219},s812:{name:"8×12",L:6096,W:2438}};
+const AREA={s48:2438*1219/1e6, s812:6096*2438/1e6};
+const DENS=7.85e-6;
+function fitPer(pl,pw,sL,sW){if(pl<=0||pw<=0)return 0;return Math.max(Math.floor(sL/pl)*Math.floor(sW/pw),Math.floor(sL/pw)*Math.floor(sW/pl));}
+
+/* ---------- 型钢库 ---------- */
+const builtinLib={
+  "L20X20X3":0.882,"L25X25X3":1.11,"L25X25X4":1.45,"L30X30X3":1.36,"L30X30X4":1.78,
+  "L40X40X4":2.42,"L40X40X5":2.97,"L50X50X4":3.06,"L50X50X5":3.77,"L50X50X6":4.47,
+  "L60X60X5":4.57,"L60X60X6":5.42,"L60X60X8":7.09,"L70X70X6":6.38,"L70X70X7":7.38,
+  "L75X75X6":6.85,"L75X75X8":9.0,"L75X75X10":11.0,"L80X80X8":9.63,"L80X80X10":11.9,
+  "L90X90X8":10.9,"L90X90X10":13.4,"L100X100X8":12.2,"L100X100X10":15.0,"L100X100X12":17.8,
+  "L120X120X10":18.2,"L120X120X12":21.6,"L120X120X15":26.6,"L150X150X10":23.0,"L150X150X12":27.3,
+  "L150X150X15":33.8,"L150X150X18":40.1,"L200X200X16":48.5,"L200X200X18":54.2,"L200X200X20":59.9,"L200X200X24":71.1
+};
+const listExamples=[
+  "UC 152x152x37","UC 203x203x46","UC 254x254x73","UC 305x305x97","UC 305x305x137","UC 356x406x287",
+  "UB 203x133x25","UB 254x146x37","UB 305x127x42","UB 406x178x60","UB 457x191x74","UB 533x210x92","UB 610x229x113",
+  "PFC 150x75x18","PFC 200x90x30","PFC 300x100x46","PFC 430x100x64",
+  "SHS 100x100x6","SHS 150x150x8","SHS 200x200x10","SHS 350x350x14",
+  "RHS 200x100x10","RHS 300x200x12","CHS 168.3x8","CHS 200x8","CHS 250x16"
+];
+let customLib={};
+try{const s=localStorage.getItem('steelMatLib')||localStorage.getItem('steelCustomLib');if(s)customLib=JSON.parse(s)||{};}catch(e){}
+function libEntry(key){const e=customLib[key];if(e==null)return null;return (typeof e==='object')?e:{w:e};}
+function persistLib(){try{localStorage.setItem('steelMatLib',JSON.stringify(customLib));}catch(e){}}
+function normKey(s){return (s||'').toUpperCase().replace(/×/g,'X').replace(/\s+/g,'').replace(/KG\/M/g,'');}
+function resolveUnitWeight(sec){
+  if(!sec||!sec.trim())return null;
+  const key=normKey(sec);
+  const le=libEntry(key);
+  if(le&&le.w!=null)return{w:le.w,est:false,ref:le};
+  if(builtinLib[key]!=null)return{w:builtinLib[key],est:false};
+  const s=sec.toUpperCase().replace(/×/g,'X');
+  let m=s.match(/([\d.]+)\s*KG\s*\/?\s*M/);
+  if(m)return{w:parseFloat(m[1]),est:false};
+  m=s.match(/\b(UB|UC|UBP|PFC|UKB|UKC|UKPFC|IPE|HEA|HEB|HEM|I-?BEAM|H-?BEAM|W-?BEAM)\b[^\d]*[\d.]+\s*X\s*[\d.]+\s*X\s*([\d.]+)/);
+  if(m)return{w:parseFloat(m[2]),est:false};
+  m=s.match(/\b(SHS|RHS)\b[^\d]*([\d.]+)\s*X\s*([\d.]+)\s*X\s*([\d.]+)/);
+  if(m){const h=+m[2],b=+m[3],t=+m[4];const area=h*b-Math.max(0,h-2*t)*Math.max(0,b-2*t);return{w:area*0.00785,est:true};}
+  m=s.match(/\b(CHS|PIPE|PIP)\b[^\d]*([\d.]+)\s*X\s*([\d.]+)/);
+  if(m){const D=+m[2],t=+m[3];const area=Math.PI/4*(D*D-Math.max(0,D-2*t)*Math.max(0,D-2*t));return{w:area*0.00785,est:true};}
+  return null;
+}
+function refreshDatalist(){
+  const dl=document.getElementById('steelList');
+  const set=new Set([...listExamples,...Object.keys(builtinLib),...Object.keys(customLib)]);
+  dl.innerHTML=[...set].map(x=>`<option value="${x}">`).join('');
+}
+
+/* ---------- 工具 ---------- */
+function pn(v){if(v==null)return 0;const x=parseFloat(String(v).replace(/[,\s]/g,''));return isNaN(x)?0:x;}
+function n(id){return pn(document.getElementById(id).value);}
+// BQ格支持 =算式(只认数字和 + - * / ( ) . ,安全,不用eval)
+function evalExpr(raw){
+  let s=String(raw).trim();
+  if(s[0]==='=')s=s.slice(1);
+  s=s.replace(/,/g,'').replace(/×/g,'*').replace(/÷/g,'/');
+  if(!/^[0-9+\-*/().\s]+$/.test(s)||!s.trim())return null;
+  try{const v=Function('"use strict";return('+s+')')();return (typeof v==='number'&&isFinite(v))?v:null;}catch(e){return null;}
+}
+function exprBlur(el){
+  const raw=(el.value||'').trim();
+  if(raw[0]==='='){const v=evalExpr(raw);if(v!=null){el.value=Math.round(v*1000)/1000;calc();}}
+}
+// 切料明细解析:"0.55×1536+0.339×256" → [{len,count}]
+function parseCutlist(s){
+  if(!s||!s.trim())return null;
+  const parts=s.replace(/×/g,'*').replace(/x/gi,'*').replace(/\s/g,'').split('+').filter(Boolean);
+  const segs=[];
+  for(const p of parts){
+    const m=p.split('*');
+    const len=parseFloat(m[0]),cnt=m.length>1?parseFloat(m[1]):1;
+    if(isFinite(len)&&len>0&&isFinite(cnt)&&cnt>0)segs.push({len,count:Math.round(cnt)});
+  }
+  return segs.length?segs:null;
+}
+// 一维排料 FFD(最长优先、首个放得下):每段占用=段长+锯缝
+function packFFD(segs,stock,kerf){
+  let pieces=[];
+  for(const s of segs)for(let k=0;k<s.count;k++)pieces.push(s.len);
+  pieces.sort((a,b)=>b-a);
+  const bins=[];let overlong=0;
+  for(const p of pieces){
+    const occ=p+kerf;
+    if(p>stock+1e-9){overlong++;bins.push(stock);continue;}
+    let placed=false;
+    for(let b=0;b<bins.length;b++){if(bins[b]+occ<=stock+1e-9){bins[b]+=occ;placed=true;break;}}
+    if(!placed)bins.push(occ);
+  }
+  const netLen=segs.reduce((a,s)=>a+s.len*s.count,0);
+  return {bins:bins.length,overlong,netLen};
+}
+function set(id,val){document.getElementById(id).textContent=val;}
+function fmt(x,d=2){return (Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
+
+/* ---------- 型钢行 ---------- */
+function matRow(d={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="c num sn">-</td>
+    <td class="l"><input class="l name-in" placeholder="如 MCB1 / Truss1" value="${d.name||''}" oninput="calc()"></td>
+    <td class="l"><input class="l sec sec-in" list="steelList" placeholder="如 UC 305x305x143" value="${d.sec||''}" oninput="autoW(this)"></td>
+    <td><div class="uwcell"><input class="uw num" placeholder="0" value="${d.uw||''}" oninput="uwManual(this)"><span class="wbadge"></span><button class="rem" onclick="remember(this)">记</button></div></td>
+    <td><input class="len num" placeholder="12" value="${d.len||'12'}" oninput="calc()"></td>
+    <td><input class="lenm num" placeholder="空=填kg" value="${d.lenm||''}" oninput="calc()" onblur="exprBlur(this)" style="width:92px"></td>
+    <td><input class="cutlist l" placeholder="如 0.55×1536+0.339×256" value="${d.cutlist||''}" oninput="calc()" style="min-width:180px"></td>
+    <td><input class="bq num" placeholder="0 或 =164+61" value="${d.bq||''}" oninput="calc()" onblur="exprBlur(this)"></td>
+    <td><input class="pc num" placeholder="0" value="${d.pc||''}" oninput="calc()"></td>
+    <td class="calc num pcw">0.00</td><td class="calc num pcs"><span class="pcsval">0</span><br><span class="pcstag" style="font-size:9px;font-weight:600;color:var(--zinc)"></span></td><td class="num waste">—</td><td class="calc num ppt">0.00</td><td class="calc num cost">0.00</td>
+    <td><button class="del" onclick="this.closest('tr').remove();calc()">×</button></td>`;
+  document.getElementById('matbody').appendChild(tr);
+  if(d.uw){tr.querySelector('.uw').dataset.auto='';}
+  if(d.sec&&!d.uw)autoW(tr.querySelector('.sec'));
+}
+function addMat(){matRow();calc();}
+function autoW(el){
+  const tr=el.closest('tr'),uwEl=tr.querySelector('.uw'),badge=tr.querySelector('.wbadge');
+  const r=resolveUnitWeight(el.value);
+  if(r&&(uwEl.value===''||uwEl.dataset.auto==='1')){
+    uwEl.value=Math.round(r.w*1000)/1000;uwEl.dataset.auto='1';
+    badge.textContent=r.est?'估算':'库';badge.className='wbadge '+(r.est?'w-est':'w-lib');badge.style.display='';
+    // 记过的参考价:该行每根价空着就带出(可改),标黄提醒核当前价
+    if(r.ref&&r.ref.price>0){
+      const pcEl=tr.querySelector('.pc'),len=pn(tr.querySelector('.len').value)||12;
+      if(pcEl.value===''){
+        pcEl.value=Math.round(r.ref.price/1000*(r.w*len));
+        pcEl.style.background='#FFFDF3';pcEl.title='参考价('+(r.ref.date||'')+'),请核当前市场价';
+      }
+    }
+  }
+  calc();
+}
+function uwManual(el){el.dataset.auto='';el.closest('tr').querySelector('.wbadge').style.display='none';calc();}
+function remember(btn){
+  const tr=btn.closest('tr'),sec=tr.querySelector('.sec').value.trim();
+  const uw=pn(tr.querySelector('.uw').value),len=pn(tr.querySelector('.len').value),pc=pn(tr.querySelector('.pc').value);
+  if(!sec||!uw){alert('先填截面和单位重再点"记"');return;}
+  const pcw=uw*len,refT=(pcw>0&&pc>0)?pc/pcw*1000:0;
+  const cur=libEntry(normKey(sec))||{};
+  customLib[normKey(sec)]={w:uw,price:refT||cur.price||0,date:new Date().toISOString().slice(0,7),sec};
+  persistLib();refreshDatalist();autosave();
+  const b=tr.querySelector('.wbadge');b.textContent=refT?'已记价':'已记';b.className='wbadge w-lib';b.style.display='';
+}
+
+/* ---------- 钢板行 ---------- */
+function cutRow(d={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="c num sn">-</td>
+    <td class="l"><input class="l" placeholder="如 底板P1" value="${d.name||''}" oninput="calc()"></td>
+    <td><input class="cut-in num pl" placeholder="0" value="${d.L||''}" oninput="calc()"></td>
+    <td><input class="cut-in num pw" placeholder="0" value="${d.W||''}" oninput="calc()"></td>
+    <td><input class="cut-in num pt" placeholder="0" value="${d.t||''}" oninput="calc()"></td>
+    <td><input class="cut-in num pkg" placeholder="0" value="${d.kg||''}" oninput="calc()"></td>
+    <td class="calc num pu">0.00</td>
+    <td><input class="cut-in num pq" placeholder="0" value="${d.q||''}" oninput="calc()"></td>
+    <td><button class="del" onclick="this.closest('tr').remove();calc()">×</button></td>`;
+  document.getElementById('cutbody').appendChild(tr);
+}
+function addCut(){cutRow();calc();}
+/* ---------- BQ 单价换算 ---------- */
+function bqcRow(d={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="c num sn">-</td>
+    <td class="l"><input class="l bqc-code" placeholder="如 2.4" value="${d.code||''}" oninput="calc()" style="width:84px"></td>
+    <td class="l"><input class="l bqc-desc" placeholder="描述" value="${d.desc||''}" oninput="calc()" style="min-width:150px"></td>
+    <td><input class="num bqc-qty" placeholder="0" value="${d.qty||''}" oninput="calc()" onblur="exprBlur(this)" style="width:84px"></td>
+    <td><select class="bqc-unit" onchange="calc()"><option value="m">m</option><option value="No">No</option><option value="m²">m²</option><option value="kg">kg</option><option value="t">t</option></select></td>
+    <td class="calc num bqc-mkg">0</td>
+    <td class="calc num bqc-uw">—</td>
+    <td><input class="num bqc-ovr" placeholder="空=自动" value="${d.ovr||''}" oninput="calc()" style="width:84px"></td>
+    <td class="calc num bqc-wt">0.000</td>
+    <td class="calc num bqc-rate">0.00</td>
+    <td class="calc num bqc-amt">0.00</td>
+    <td><button class="del" onclick="this.closest('tr').remove();calc()">×</button></td>`;
+  document.getElementById('bqcbody').appendChild(tr);
+  tr.querySelector('.bqc-unit').value=d.unit||'m';
+}
+function addBQC(){bqcRow();try{calc();}catch(e){console.warn(e);}}
+function updateBQC(){
+  const R=window.__R||{};const Total=R.total||0, grand=R.grand||0, netTon=R.ton||0;
+  const coeff=pn(document.getElementById('bqcCoeff').value)||1;
+  // 建标签→重量 映射(型钢+钢板),同时统计项目所有材料净重
+  const labelWt={};let totalMatKg=0;
+  document.querySelectorAll('#matbody tr').forEach(tr=>{
+    const lb=(tr.querySelector('.name-in').value||'').trim(),kg=pn(tr.querySelector('.bq').value);
+    if(kg>0){totalMatKg+=kg;if(lb)labelWt[lb]=(labelWt[lb]||0)+kg;}
+  });
+  document.querySelectorAll('#cutbody tr').forEach(tr=>{
+    const lb=(tr.querySelector('input.l').value||'').trim(),kg=pn(tr.querySelector('.pkg').value);
+    if(kg>0){totalMatKg+=kg;if(lb)labelWt[lb]=(labelWt[lb]||0)+kg;}
+  });
+  let sumKg=0,sumWt=0,sumAmt=0,coveredKg=0;const usedLabels={};
+  document.querySelectorAll('#bqcbody tr').forEach((tr,idx)=>{
+    tr.querySelector('.sn').textContent=idx+1;
+    const code=(tr.querySelector('.bqc-code').value||'').trim();
+    const qty=pn(tr.querySelector('.bqc-qty').value);
+    const unit=tr.querySelector('.bqc-unit').value;
+    const ovr=pn(tr.querySelector('.bqc-ovr').value);
+    const matched=code?(labelWt[code]||0):0;
+    if(code&&labelWt[code]!=null&&!usedLabels[code]){coveredKg+=labelWt[code];usedLabels[code]=1;}
+    const wt_t = ovr>0 ? ovr : matched*coeff/1000;    // 该项重量t
+    const rate = qty>0 ? wt_t*Total/qty : 0;
+    const amt = wt_t*Total;
+    const uw = qty>0 ? (ovr>0?ovr*1000:matched)/qty : 0;  // 每单位重 kg/单位
+    tr.querySelector('.bqc-mkg').textContent=ovr>0?'(覆盖)':fmt(matched,0);
+    tr.querySelector('.bqc-uw').textContent=qty>0?fmt(uw,1)+' kg/'+unit:'—';
+    tr.querySelector('.bqc-wt').textContent=fmt(wt_t,3);
+    tr.querySelector('.bqc-rate').textContent=fmt(rate,2);
+    tr.querySelector('.bqc-amt').textContent=fmt(amt,2);
+    // 覆盖标记
+    tr.classList.toggle('ovrrow',ovr>0);
+    const wtEl=tr.querySelector('.bqc-wt');wtEl.style.color=ovr>0?'var(--warn)':'';wtEl.style.fontWeight=ovr>0?'700':'';
+    wtEl.title=ovr>0?'手动覆盖重量(走供应商报价,不按$/t)':'';
+    if(!ovr){sumKg+=matched;}
+    sumWt+=wt_t;sumAmt+=amt;
+  });
+  set('bqcSumKg',fmt(sumKg,0));
+  set('bqcSumWt',fmt(sumWt,3));
+  set('bqcSumAmt',fmt(sumAmt,2));
+  // 对账
+  const recon=document.getElementById('bqcRecon');
+  const uncovered=totalMatKg-coveredKg;
+  let h='';
+  if(totalMatKg>0){
+    if(Math.abs(uncovered)<0.5){
+      h+=`<div style="color:var(--ok)">✓ 材料对账:已归入 BQ 项的材料 ${fmt(coveredKg,0)}kg = 项目净重 ${fmt(totalMatKg,0)}kg,所有材料行都填了标签。</div>`;
+    }else{
+      h+=`<div style="color:var(--warn);font-weight:600">⚠ 材料对账:已归入 ${fmt(coveredKg,0)}kg,项目净重 ${fmt(totalMatKg,0)}kg,<b>差 ${fmt(uncovered,0)}kg</b> 没归入任何 BQ 项 → 有材料行"标签/位置"没填对应 BQ 编号,或编号拼写不一致。</div>`;
+    }
+  }
+  // Amount vs 项目总价
+  if(grand>0){
+    const d=sumAmt-grand, near=Math.abs(d)<=Math.max(1,grand*0.005);
+    h+=`<div style="color:${near?'var(--ok)':'var(--ink-soft)'}">Amount 合计 $${fmt(sumAmt,2)} vs 项目总价 $${fmt(grand,2)}`+
+       (near?' ✓ 吻合':` · 差 $${fmt(d,2)}(${d>0?'高':'低'},多半是零碎件系数 ${coeff} 的加成,或有项手动覆盖/漏标签)`)+`</div>`;
+  }
+  recon.innerHTML=h;
+}
+
+/* ---------- 档位切换 ---------- */
+function setNdt(m){ndtMode=m;
+  document.getElementById('ndtSmall').classList.toggle('on',m==='small');
+  document.getElementById('ndtLarge').classList.toggle('on',m==='large');
+  document.getElementById('ndtSmallF').style.display=m==='small'?'':'none';
+  document.getElementById('ndtLargeF').style.display=m==='large'?'':'none';calc();}
+function setPaint(m){paintMode=m;
+  document.getElementById('paintFlat').classList.toggle('on',m==='flat');
+  document.getElementById('paintCalc').classList.toggle('on',m==='calc');
+  document.getElementById('paintFlatBox').style.display=m==='flat'?'':'none';
+  document.getElementById('vPaintCalc').style.display=m==='calc'?'':'none';
+  document.getElementById('paintCalcBox').style.display=m==='calc'?'':'none';
+  document.getElementById('paintSub').textContent=m==='flat'?'一口价 $/t':'单独算,总额 ÷ 吨重';calc();}
+function setHdg(m){hdgMode=m;
+  document.getElementById('hdgFlat').classList.toggle('on',m==='flat');
+  document.getElementById('hdgCalc').classList.toggle('on',m==='calc');
+  document.getElementById('hdgFlatBox').style.display=m==='flat'?'':'none';
+  document.getElementById('vHdgCalc').style.display=m==='calc'?'':'none';
+  document.getElementById('hdgCalcBox').style.display=m==='calc'?'':'none';
+  document.getElementById('hdgSub').textContent=m==='flat'?'一口价 $/t':'单独算,总额 ÷ 吨重';calc();}
+function setTr(m){trMode=m;
+  document.getElementById('trTonBtn').classList.toggle('on',m==='ton');
+  document.getElementById('trTruckBtn').classList.toggle('on',m==='truck');
+  document.getElementById('trTonBox').style.display=m==='ton'?'flex':'none';
+  document.getElementById('trTruckBox').style.display=m==='truck'?'flex':'none';calc();}
+function trTripAuto(){trManualTrips=false;calc();}
+function trTripsManual(){trManualTrips=true;calc();}
+function crManual(){crManualFlag=true;calc();}
+
+/* ---------- 钢板计算 ---------- */
+let platePrices={};
+function setPlatePrice(t,which,val){(platePrices[t]=platePrices[t]||{})[which]=val;calc();}
+function computePlates(){
+  const kerf=n('kerf');
+  const groups={};let i=0;
+  document.querySelectorAll('#cutbody tr').forEach(tr=>{
+    i++;tr.querySelector('.sn').textContent=i;
+    const name=tr.querySelector('input.l').value;
+    const L=pn(tr.querySelector('.pl').value),W=pn(tr.querySelector('.pw').value),t=pn(tr.querySelector('.pt').value),kg=pn(tr.querySelector('.pkg').value);
+    const unit=L*W*t*DENS;
+    tr.querySelector('.pu').textContent=fmt(unit,2);
+    const autoQ=unit>0?Math.round(kg/unit):0;
+    const pqEl=tr.querySelector('.pq');pqEl.placeholder=autoQ||'0';
+    const q=pqEl.value!==''?pn(pqEl.value):autoQ;
+    if(!L||!W||!t||!q)return;
+    const rowNet=kg>0?kg:unit*q;
+    (groups[t]=groups[t]||[]).push({name:name||('#'+i),L,W,t,q,net:rowNet});
+  });
+  const cont=document.getElementById('groups');cont.innerHTML='';
+  let totNet=0, totBuyWt=0, countedCost=0, countedWt=0, anyCounted=false;
+  const thicks=Object.keys(groups).map(Number).sort((a,b)=>a-b);
+  thicks.forEach(t=>{
+    const rows=groups[t];let needArea=0,netW=0,blocks=0,oversize=[];
+    let A={sheets:0},B={sheets:0},C={s48:0,s812:0};
+    rows.forEach(r=>{
+      const pl=r.L+kerf,pw=r.W+kerf;
+      needArea+=r.L*r.W*r.q/1e6;netW+=r.net;blocks+=r.q;
+      const f48=fitPer(pl,pw,SHEETS.s48.L,SHEETS.s48.W),f812=fitPer(pl,pw,SHEETS.s812.L,SHEETS.s812.W);
+      if(f48===0&&f812===0){oversize.push(r.name+' '+r.L+'×'+r.W);return;}
+      if(f48>0)A.sheets+=Math.ceil(r.q/f48);else A.bad=true;
+      if(f812>0)B.sheets+=Math.ceil(r.q/f812);else B.bad=true;
+      const s48n=f48>0?Math.ceil(r.q/f48):Infinity,s812n=f812>0?Math.ceil(r.q/f812):Infinity;
+      if(s48n*AREA.s48<=s812n*AREA.s812)C.s48+=s48n;else C.s812+=s812n;
+    });
+    totNet+=netW;
+    // 该厚度组自己的大板价
+    const pp=platePrices[t]||{};const p48=pn(pp.p48),p812=pn(pp.p812),haveP=p48>0||p812>0;
+    const areaA=A.bad?Infinity:A.sheets*AREA.s48,areaB=B.bad?Infinity:B.sheets*AREA.s812,areaC=C.s48*AREA.s48+C.s812*AREA.s812;
+    const costA=A.bad?Infinity:A.sheets*p48,costB=B.bad?Infinity:B.sheets*p812,costC=C.s48*p48+C.s812*p812;
+    const opts=[
+      {k:'A',label:'全用 4×8',use:A.bad?'—':A.sheets+' 张 4×8',area:areaA,cost:costA},
+      {k:'B',label:'全用 8×12',use:B.bad?'—':B.sheets+' 张 8×12',area:areaB,cost:costB},
+      {k:'C',label:'混买(挑省的)',use:((C.s48?C.s48+' 张 4×8':'')+(C.s48&&C.s812?' + ':'')+(C.s812?C.s812+' 张 8×12':''))||'—',area:areaC,cost:costC}
+    ];
+    let best;
+    if(haveP){const m=Math.min(...opts.map(o=>o.cost));best=opts.find(o=>o.cost===m);}
+    else{const m=Math.min(...opts.map(o=>o.area));best=opts.find(o=>o.area===m);}
+    if(haveP&&best&&isFinite(best.cost)){countedCost+=best.cost;countedWt+=netW;anyCounted=true;}
+    // 买板重量(推荐买法面积 × 厚 × 密度),给整体损耗用
+    if(best&&isFinite(best.area))totBuyWt+=best.area*t*7.85;
+    // 渲染
+    const g=document.createElement('div');g.className='grp';
+    let html=`<div class="grp-head"><span class="t">厚 ${t} mm</span><span class="m">需求 <b>${blocks}</b> 块 · 需求面积 <b>${fmt(needArea)}</b> m² · 净重 <b>${fmt(netW,1)}</b> kg</span>`+
+      `<span class="m" style="margin-left:auto;display:flex;gap:10px;align-items:center">大板价 4×8 <input class="num" style="width:78px" placeholder="$/张" value="${pp.p48||''}" onchange="setPlatePrice(${t},'p48',this.value)"> 8×12 <input class="num" style="width:78px" placeholder="$/张" value="${pp.p812||''}" onchange="setPlatePrice(${t},'p812',this.value)"></span></div>`;
+    html+=`<div class="scroll"><table class="opt-tbl"><thead><tr><th class="l">买法</th><th class="l">大板用量</th><th>买板面积 m²</th><th>利用率</th><th>废料 m²</th>${haveP?'<th>花费 $</th>':''}</tr></thead><tbody>`;
+    opts.forEach(o=>{
+      const bad=!isFinite(o.area),util=bad?'—':fmt(needArea/o.area*100,0)+'%',waste=bad?'—':fmt(o.area-needArea);
+      const cls=(best&&best.k===o.k&&!bad)?'best':'';
+      html+=`<tr class="${cls}"><td class="l">${o.label}</td><td class="l">${o.use}</td><td class="num">${bad?'装不下':fmt(o.area)}</td><td class="num">${util}</td><td class="num">${waste}</td>${haveP?`<td class="num">${bad?'—':fmt(o.cost)}</td>`:''}</tr>`;
+    });
+    html+='</tbody></table></div>';
+    if(!haveP)html+=`<div style="font-size:12px;color:var(--warn);padding:6px 14px;background:var(--warn-wash)">该厚度未填大板价,暂不计入 Material</div>`;
+    if(oversize.length)html+=`<div class="oversize">超大装不下:${oversize.join('、')},请分块或单独处理</div>`;
+    g.innerHTML=html;cont.appendChild(g);
+  });
+  return {net:totNet, buyWt:totBuyWt, countedCost, countedWt, havePrice:anyCounted};
+}
+
+/* ---------- 主计算 ---------- */
+function calc(){
+  // 型钢
+  let steelCost=0,steelWt=0,steelBQ=0,steelBuy=0,i=0;
+  document.querySelectorAll('#matbody tr').forEach(tr=>{
+    i++;tr.querySelector('.sn').textContent=i;
+    const uw=pn(tr.querySelector('.uw').value),len=pn(tr.querySelector('.len').value);
+    const lenm=pn(tr.querySelector('.lenm').value),bqEl=tr.querySelector('.bq');
+    const segs=parseCutlist(tr.querySelector('.cutlist').value);
+    const kerf=pn(document.getElementById('sawKerf').value);
+    let bq, pcs, mode='总长', overlong=0;
+    const pcw=uw*len;
+    if(segs&&len>0){
+      // 排料模式:根数=装箱数;净重=总段长×单位重
+      const r=packFFD(segs,len,kerf);
+      pcs=r.bins;overlong=r.overlong;mode='排料';
+      bq=r.netLen*uw;
+      bqEl.value=Math.round(bq*1000)/1000;
+      bqEl.disabled=true;bqEl.style.background='#F2F6F8';bqEl.title='由切料明细总长×单位重自动算';
+    }else if(lenm>0&&uw>0){
+      bq=lenm*uw;
+      bqEl.value=Math.round(bq*1000)/1000;
+      bqEl.disabled=true;bqEl.style.background='#F2F6F8';bqEl.title='由 长度×单位重 自动算,清空长度可手填';
+      pcs=pcw>0?Math.ceil(bq/pcw):0;
+    }else{
+      bqEl.disabled=false;bqEl.style.background='';bqEl.title='';
+      bq=pn(bqEl.value);
+      pcs=pcw>0?Math.ceil(bq/pcw):0;
+    }
+    const pc=pn(tr.querySelector('.pc').value);
+    const cost=pcs*pc,ppt=bq>0?cost/bq*1000:0;
+    const buy=pcs*pcw, wastePct=buy>0?(buy-bq)/buy*100:0;
+    tr.querySelector('.pcw').textContent=fmt(pcw);
+    tr.querySelector('.pcsval').textContent=pcs;
+    const tagEl=tr.querySelector('.pcstag');
+    if(bq>0||segs){
+      tagEl.textContent=overlong>0?('排料·'+overlong+'段超定尺!'):mode;
+      tagEl.style.color=overlong>0?'var(--warn)':(mode==='排料'?'var(--ok)':'var(--zinc)');
+    }else{tagEl.textContent='';}
+    const wEl=tr.querySelector('.waste');
+    if(bq>0&&pcw>0){
+      wEl.textContent=fmt(wastePct,0)+'%';
+      wEl.style.color = wastePct>=30?'var(--warn)':(wastePct>=15?'#8A6D00':'var(--ink-soft)');
+      wEl.style.fontWeight = wastePct>=30?'700':'400';
+      wEl.title = wastePct>=30?('余料偏高,BQ '+bq+'kg 却买了 '+fmt(buy,0)+'kg,考虑换短定尺'):'';
+    } else { wEl.textContent='—'; wEl.style.color='var(--zinc)'; wEl.style.fontWeight='400'; wEl.title=''; }
+    tr.querySelector('.ppt').textContent=fmt(ppt);
+    const counted=bq>0&&pc>0;
+    tr.classList.toggle('pending',bq>0&&pc<=0);
+    tr.querySelector('.cost').textContent=(bq>0&&pc<=0)?'缺价·未计入':fmt(cost);
+    if(counted){steelCost+=cost;steelWt+=bq;}
+    if(bq>0&&pcw>0){steelBQ+=bq;steelBuy+=buy;}
+  });
+  // 钢板
+  const plate=computePlates();
+  // 合并 Material
+  const matCost=steelCost+plate.countedCost, matWt=steelWt+plate.countedWt;
+  const matPerTon=matWt>0?matCost/matWt*1000:0, ton=matWt/1000;
+  set('sSteel','$'+fmt(steelCost)+' / '+(steelWt/1000).toFixed(3)+'t');
+  set('sPlate',plate.havePrice?('$'+fmt(plate.countedCost)+' / '+(plate.countedWt/1000).toFixed(3)+'t'):('未计入(净重 '+(plate.net/1000).toFixed(3)+'t)'));
+  set('sTon',ton.toFixed(3));set('sMat',fmt(matPerTon));
+  set('rTon',ton.toFixed(3));
+  // 全项目整体损耗率(型钢实购+钢板买板 vs 净需求),按重量加权
+  const totNet=steelBQ+plate.net, totBuy=steelBuy+plate.buyWt;
+  const wv=document.getElementById('sWaste'),vd=document.getElementById('sWasteVerdict');
+  if(totNet>0&&totBuy>0){
+    const wpct=(totBuy-totNet)/totNet*100;
+    wv.textContent=fmt(wpct,1)+'%';
+    if(wpct<=10){vd.textContent='(10%包得住)';vd.style.color='var(--ok)';wv.style.color='var(--ok)';}
+    else{vd.textContent='(超10%!)';vd.style.color='var(--warn)';wv.style.color='var(--warn)';}
+    wv.title='净需求 '+fmt(totNet,0)+'kg,整根/套裁实购 '+fmt(totBuy,0)+'kg,多买 '+fmt(totBuy-totNet,0)+'kg';
+  }else{wv.textContent='—';vd.textContent='';wv.style.color='';}
+
+  const matCalc=matPerTon;set('vMatCalc',fmt(matCalc));
+  const matManual=n('matManual');
+  const mat=matManual>0?matManual:matCalc;
+  const vMatEl=document.getElementById('vMat');vMatEl.textContent=fmt(mat);
+  vMatEl.style.color=matManual>0?'var(--warn)':'';vMatEl.title=matManual>0?('手动覆盖;加权算出为 '+fmt(matCalc)):'';
+  const wast=mat*n('wastPct')/100;set('vWast',fmt(wast));
+  const fab=n('fab');
+  const ndtTotal=n('ndtKinds')*400+(ndtMode==='small'?n('ndtVisits')*1200:n('ndtMonths')*8000);
+  const ndt=ton>0?ndtTotal/ton:0;set('ndtTotal',fmt(ndtTotal));set('ndtOut',fmt(ndt));set('vNdt',fmt(ndt));
+  let hdg;if(hdgMode==='flat'){hdg=n('hdgV');}else{const ht=n('hdgTotal');hdg=ton>0?ht/ton:0;set('hdgOut',fmt(hdg));document.getElementById('vHdgCalc').textContent=fmt(hdg);}
+  let paint;if(paintMode==='flat'){paint=n('paintV');}else{const pt=n('paintTotal');paint=ton>0?pt/ton:0;set('paintOut',fmt(paint));document.getElementById('vPaintCalc').textContent=fmt(paint);}
+  // 运输
+  let trans=0;
+  if(trMode==='ton'){
+    document.getElementById('trTon').placeholder=ton?ton.toFixed(3):'0';
+    const tt=n('trTon')*n('trTonRate');set('trTonTotal',fmt(tt));trans=ton>0?tt/ton:0;set('trTonOut',fmt(trans));
+  }else{
+    const cap=n('trCap');
+    if(!trManualTrips){const trips=cap>0?Math.ceil(ton/cap):0;document.getElementById('trTrips2').value=trips||'';}
+    const trips=n('trTrips2'),tt=trips*n('trTripRate');set('trTruckTotal',fmt(tt));trans=ton>0?tt/ton:0;set('trTruckOut',fmt(trans));
+    const bed=n('trBedLen');let over=[],j=0;
+    document.querySelectorAll('#matbody tr').forEach(tr=>{j++;const len=pn(tr.querySelector('.len').value);if(bed>0&&len>bed)over.push('#'+j+' '+len+'m');});
+    document.getElementById('trOverMsg').textContent=over.length?('超长构件('+over.join('、')+'),需特殊运输/准证,请单独核价'):'';
+  }
+  set('vTrans',fmt(trans));
+  const inst=n('inst');
+  if(!crManualFlag){const c=n('crDays')*n('crRate');document.getElementById('crTotal').value=c?c:'';}
+  const crTotal=n('crTotal'),crane=ton>0?crTotal/ton:0;set('crOut',fmt(crane));set('vCrane',fmt(crane));
+  const empty=crTotal===0;document.getElementById('craneLine').classList.toggle('warnrow',empty);document.getElementById('craneFlag').style.display=empty?'':'none';
+
+  const cost=mat+wast+fab+ndt+hdg+paint+trans+inst+crane;
+  const profPct=n('profPct'),prof=cost*profPct/100;set('vProf',fmt(prof));
+  const total=cost+prof;
+  set('rCost',fmt(cost));set('rProf',fmt(prof));set('rProfPct',profPct);set('rTotal',fmt(total));set('rGrand',fmt(total*ton));
+  window.__R={mat,matCalc,matManual,wast,wastPct:n('wastPct'),fab,ndt,hdg,paint,trans,inst,crane,cost,prof,profPct,total,ton,grand:total*ton,
+    steelCost,steelWt,plateCost:plate.countedCost,plateWt:plate.countedWt,plateNet:plate.net,platePriced:plate.havePrice,matPerTon,
+    wasteNet:totNet,wasteBuy:totBuy};
+  try{updateBQC();}catch(e){console.warn('BQ换算跳过:',e.message);}
+  autosave();
+}
+
+/* ---------- 存档 / 载入 / 记忆 ---------- */
+function collect(){
+  const mats=[...document.querySelectorAll('#matbody tr')].map(tr=>({
+    name:tr.querySelector('.name-in').value,sec:tr.querySelector('.sec').value,
+    uw:tr.querySelector('.uw').value,len:tr.querySelector('.len').value,lenm:tr.querySelector('.lenm').value,cutlist:tr.querySelector('.cutlist').value,bq:tr.querySelector('.bq').value,pc:tr.querySelector('.pc').value}));
+  const cuts=[...document.querySelectorAll('#cutbody tr')].map(tr=>({
+    name:tr.querySelector('input.l').value,L:tr.querySelector('.pl').value,W:tr.querySelector('.pw').value,t:tr.querySelector('.pt').value,kg:tr.querySelector('.pkg').value,q:tr.querySelector('.pq').value}));
+  const bqcs=[...document.querySelectorAll('#bqcbody tr')].map(tr=>({
+    code:tr.querySelector('.bqc-code').value,desc:tr.querySelector('.bqc-desc').value,qty:tr.querySelector('.bqc-qty').value,unit:tr.querySelector('.bqc-unit').value,ovr:tr.querySelector('.bqc-ovr').value}));
+  const g=id=>document.getElementById(id).value;
+  return {projName:g('projName'),mats,cuts,bqcs,ndtMode,paintMode,hdgMode,trMode,customLib,platePrices,fields:{
+    kerf:g('kerf'),sawKerf:g('sawKerf'),bqcCoeff:g('bqcCoeff'),
+    matManual:g('matManual'),wastPct:g('wastPct'),fab:g('fab'),ndtKinds:g('ndtKinds'),ndtVisits:g('ndtVisits'),ndtMonths:g('ndtMonths'),
+    hdgV:g('hdgV'),hdgTotal:g('hdgTotal'),paintV:g('paintV'),paintTotal:g('paintTotal'),
+    trTon:g('trTon'),trTonRate:g('trTonRate'),trCap:g('trCap'),trTrips2:g('trTrips2'),trTripRate:g('trTripRate'),trBedLen:g('trBedLen'),
+    inst:g('inst'),crDays:g('crDays'),crRate:g('crRate'),crTotal:g('crTotal'),profPct:g('profPct')}};
+}
+let _restoring=false;
+function applyState(d){
+  if(!d)return;
+  _restoring=true;
+  if(d.projName!=null)document.getElementById('projName').value=d.projName;
+  if(d.customLib){customLib={...customLib,...d.customLib};persistLib();refreshDatalist();}
+  platePrices=d.platePrices||{};
+  document.getElementById('matbody').innerHTML='';(d.mats||[]).forEach(m=>matRow(m));if(!d.mats||!d.mats.length)matRow({len:'12'});
+  document.getElementById('cutbody').innerHTML='';(d.cuts||[]).forEach(c=>cutRow(c));if(!d.cuts||!d.cuts.length)cutRow({});
+  document.getElementById('bqcbody').innerHTML='';(d.bqcs||[]).forEach(b=>bqcRow(b));if(!d.bqcs||!d.bqcs.length)bqcRow({});
+  // 先清后填字段
+  ['matManual','kerf','sawKerf','bqcCoeff','wastPct','fab','ndtKinds','ndtVisits','ndtMonths','hdgV','hdgTotal','paintV','paintTotal','trTon','trTonRate','trCap','trTrips2','trTripRate','trBedLen','inst','crDays','crRate','crTotal','profPct'].forEach(k=>{const el=document.getElementById(k);if(el)el.value='';});
+  for(const k in (d.fields||{})){const el=document.getElementById(k);if(el)el.value=d.fields[k];}
+  if(!document.getElementById('sawKerf').value)document.getElementById('sawKerf').value='0.003';
+  if(!document.getElementById('bqcCoeff').value)document.getElementById('bqcCoeff').value='1.02';
+  trManualTrips=true;crManualFlag=true;
+  setNdt(d.ndtMode||'small');setPaint(d.paintMode||'flat');setHdg(d.hdgMode||'flat');setTr(d.trMode||'ton');
+  _restoring=false;calc();
+}
+// 命名导出文件(换电脑/云盘备份)
+function saveJSON(){
+  const nm=(document.getElementById('projName').value||'报价存档').trim();
+  const blob=new Blob([JSON.stringify(collect(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=nm+'_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function loadJSON(e){
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{applyState(JSON.parse(r.result));flash('已载入文件');}catch(err){alert('文件读不了:'+err.message);}};
+  r.readAsText(f);
+}
+// 本机命名项目(存浏览器,按名字切换)
+function loadProjects(){try{return JSON.parse(localStorage.getItem('qsProjects')||'{}');}catch(e){return {};}}
+function saveProjects(o){try{localStorage.setItem('qsProjects',JSON.stringify(o));}catch(e){}}
+function refreshProjSel(){
+  const sel=document.getElementById('projSel');if(!sel)return;const o=loadProjects();
+  sel.innerHTML='<option value="">— 打开已存项目 —</option>'+Object.keys(o).map(k=>`<option value="${k}">${k}</option>`).join('');
+}
+function saveProject(){
+  const nm=(document.getElementById('projName').value||'').trim();
+  if(!nm){alert('先在左边填一个项目名');return;}
+  const o=loadProjects();o[nm]=collect();saveProjects(o);refreshProjSel();
+  document.getElementById('projSel').value=nm;flash('已保存项目「'+nm+'」');
+}
+function loadProject(nm){
+  if(!nm)return;const o=loadProjects();if(!o[nm])return;
+  applyState(o[nm]);document.getElementById('projName').value=nm;flash('已打开「'+nm+'」');
+}
+function deleteProject(){
+  const nm=document.getElementById('projSel').value||document.getElementById('projName').value;
+  if(!nm){alert('先在下拉里选一个项目');return;}
+  if(!confirm('删除项目「'+nm+'」?此操作不可撤销'))return;
+  const o=loadProjects();delete o[nm];saveProjects(o);refreshProjSel();flash('已删除「'+nm+'」');
+}
+function newProject(){
+  if(!confirm('清空当前内容、新建空白?(不影响已保存的项目)'))return;
+  applyState({projName:'',mats:[{len:'12'}],cuts:[{}],fields:{wastPct:'10',profPct:'10'}});
+}
+// 自动记忆(本机,防重填)
+let _saveT;
+function autosave(){if(_restoring)return;clearTimeout(_saveT);_saveT=setTimeout(()=>{try{localStorage.setItem('qsAutosave',JSON.stringify(collect()));}catch(e){}},400);}
+function flash(msg){const el=document.getElementById('saveHint');if(!el)return;const old=el.dataset.base||el.textContent;el.dataset.base=old;el.textContent=msg;el.style.color='var(--ok)';clearTimeout(el._t);el._t=setTimeout(()=>{el.textContent=old;el.style.color='';},2200);}
+
+/* ---------- 打印视图(A小结 + B算式 + C明细) ---------- */
+function doPrint(){calc();buildPrintView();window.print();}
+function buildPrintView(){
+  const R=window.__R||{};
+  const proj=(document.getElementById('projName').value||'钢结构综合单价报价').trim();
+  const today=new Date().toISOString().slice(0,10);
+  const ton=R.ton||0;
+  let h=`<h2>${proj}</h2><div class="psub">钢结构综合单价 · ${today} · 项目总吨重(仅已计入) ${ton.toFixed(3)} t</div>`;
+
+  // 01 型钢明细
+  const mrows=[...document.querySelectorAll('#matbody tr')].filter(tr=>pn(tr.querySelector('.bq').value)>0);
+  if(mrows.length){
+    h+=`<h3>01 · 材料目录 · 型钢</h3>`;
+    h+=`<table><thead><tr><th class="l">标签</th><th class="l">截面</th><th>BQ kg</th><th>单根kg</th><th>根数</th><th>余料</th><th>$/pc</th><th>实购$</th></tr></thead><tbody>`;
+    mrows.forEach(tr=>{const g=c=>tr.querySelector(c);
+      h+=`<tr><td class="l">${g('.name-in').value||'-'}</td><td class="l">${g('.sec').value||'-'}</td>`+
+         `<td class="num">${fmt(pn(g('.bq').value),0)}</td><td class="num">${g('.pcw').textContent}</td>`+
+         `<td class="num">${g('.pcsval').textContent}</td><td class="num">${g('.waste').textContent}</td>`+
+         `<td class="num">${fmt(pn(g('.pc').value),0)}</td><td class="num">${g('.cost').textContent}</td></tr>`;});
+    h+=`<tr class="tot"><td class="l" colspan="7">型钢已计入合计</td><td class="num">$${fmt(R.steelCost||0)} / ${((R.steelWt||0)/1000).toFixed(3)}t</td></tr></tbody></table>`;
+  }
+  // 01B 钢板明细
+  const crows=[...document.querySelectorAll('#cutbody tr')].filter(tr=>pn(tr.querySelector('.pl').value)>0);
+  if(crows.length){
+    h+=`<h3>01B · 材料目录 · 钢板</h3>`;
+    h+=`<table><thead><tr><th class="l">标签</th><th>尺寸 mm</th><th>厚</th><th>BQ kg</th><th>块数</th></tr></thead><tbody>`;
+    crows.forEach(tr=>{const g=c=>tr.querySelector(c);const q=g('.pq').value||g('.pq').placeholder;
+      h+=`<tr><td class="l">${g('input.l').value||'-'}</td><td class="num">${pn(g('.pl').value)}×${pn(g('.pw').value)}</td>`+
+         `<td class="num">${pn(g('.pt').value)}</td><td class="num">${fmt(pn(g('.pkg').value),0)}</td><td class="num">${q}</td></tr>`;});
+    const pstat=R.platePriced?('已计入 $'+fmt(R.plateCost||0)+' / '+((R.plateWt||0)/1000).toFixed(3)+'t'):('未计入,净重 '+((R.plateNet||0)/1000).toFixed(3)+'t');
+    h+=`<tr class="tot"><td class="l" colspan="4">钢板状态(套裁张数见屏幕)</td><td class="num">${pstat}</td></tr></tbody></table>`;
+  }
+  // 材料合计
+  h+=`<h3>材料合计</h3><table><tbody>`+
+     `<tr><td class="l">合并 Material(报价用)</td><td class="num">$${fmt(R.mat||0)} /t</td><td class="l">${(R.matManual>0)?('手动价 · 加权算出 $'+fmt(R.matCalc||0)):'型钢+钢板按重量加权'}</td></tr>`+
+     `<tr><td class="l">项目总吨重(仅已计入)</td><td class="num">${ton.toFixed(3)} t</td><td class="l">"先算后除"各项的分母</td></tr>`+
+     ((R.wasteNet>0&&R.wasteBuy>0)?(()=>{const wp=(R.wasteBuy-R.wasteNet)/R.wasteNet*100;return `<tr><td class="l">全项目整体损耗率</td><td class="num">${fmt(wp,1)}%</td><td class="l">净需求${fmt(R.wasteNet,0)}kg vs 实购${fmt(R.wasteBuy,0)}kg · ${wp<=10?'10%包得住':'超10%'}</td></tr>`;})():'')+
+     `</tbody></table>`;
+
+  // 02 综合单价主表十项(含先算后除算式)
+  h+=`<h3>02 · 综合单价主表 · 十项($/t)</h3>`;
+  h+=`<table class="maintbl"><thead><tr><th class="l">项目</th><th>$/t</th><th class="l">算法 / 计算过程</th></tr></thead><tbody>`;
+  const kinds=n('ndtKinds'),ndtBase=kinds*400,ndtTier=ndtMode==='small'?n('ndtVisits')*1200:n('ndtMonths')*8000,ndtTot=ndtBase+ndtTier;
+  const ndtExpr=`${kinds}种×$400 + ${ndtMode==='small'?(n('ndtVisits')+'次×$1200'):(n('ndtMonths')+'月×$8000')} = $${fmt(ndtTot,0)} ÷ ${ton.toFixed(3)}t`;
+  let trExpr;
+  if(trMode==='ton'){trExpr=`${fmt(n('trTon'),1)}t × $${fmt(n('trTonRate'),0)}/t = $${fmt(n('trTon')*n('trTonRate'),0)} ÷ ${ton.toFixed(3)}t`;}
+  else{trExpr=`${n('trTrips2')}趟 × $${fmt(n('trTripRate'),0)}/趟 = $${fmt(n('trTrips2')*n('trTripRate'),0)} ÷ ${ton.toFixed(3)}t`;}
+  const crExpr=`${n('crDays')}天 × $${fmt(n('crRate'),0)}/天 = $${fmt(n('crTotal'),0)} ÷ ${ton.toFixed(3)}t`;
+  const rows=[
+    ['1 Material 材料',R.mat,'型钢+钢板 按重量加权'],
+    ['2 Wastage 损耗',R.wast,'Material × '+(R.wastPct||0)+'%'],
+    ['3 Fabrication 加工',R.fab,'一口价'],
+    ['4 NDT/ITA 探伤',R.ndt,ndtExpr],
+    ['5 HDG 镀锌',R.hdg,'一口价/单独算'],
+    ['6 Paint 油漆',R.paint,'一口价/单独算'],
+    ['7 Transport 运输',R.trans,trExpr],
+    ['8 Installation 安装',R.inst,'一口价'],
+    ['9 Crane/MEWP 吊车',R.crane,crExpr]
+  ];
+  rows.forEach(r=>{h+=`<tr><td class="l">${r[0]}</td><td class="num">${fmt(r[1]||0)}</td><td class="l">${r[2]}</td></tr>`;});
+  h+=`<tr><td class="l">10 Profit 利润</td><td class="num">${fmt(R.prof||0)}</td><td class="l">成本合计 × ${(R.profPct||0)}%</td></tr></tbody></table>`;
+
+  // 03 结果
+  h+=`<h3>03 · 结果</h3><table><tbody>`+
+     `<tr class="tot"><td class="l">成本合计(Material→Crane,含 Wastage)</td><td class="num">$${fmt(R.cost||0)} /t</td></tr>`+
+     `<tr><td class="l">Profit 利润(${(R.profPct||0)}%)</td><td class="num">$${fmt(R.prof||0)} /t</td></tr>`+
+     `<tr class="grand"><td class="l">Total 综合单价</td><td class="num">$${fmt(R.total||0)} /t</td></tr>`+
+     `<tr class="tot"><td class="l">项目总价 = Total × ${ton.toFixed(3)}t</td><td class="num">$${fmt(R.grand||0)}</td></tr></tbody></table>`;
+
+  h+=`<div class="ft">说明:$/t 为算出的输出,非输入。余料率≥30%建议换短定尺。"先算后除"项按项目总吨重摊。没填价的料不计入。本表由报价工具生成,仅供内部核价。</div>`;
+  document.getElementById('printArea').innerHTML=h;
+}
+
+/* ---------- 初始化 ---------- */
+refreshDatalist();refreshProjSel();
+let _restored=false;
+try{const s=localStorage.getItem('qsAutosave');if(s){applyState(JSON.parse(s));_restored=true;}}catch(e){}
+if(!_restored){matRow({len:'12'});matRow({len:'12'});cutRow({});bqcRow({});calc();}
+</script>
+</body>
+</html>
